@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>읽고 쓰는 연습장</title>
+<style>
+
+:root{color-scheme:light;--ink:#352c25;--muted:#68594d;--paper:#f7f1e7;--page:#fffcf5;--line:#d8c9b7;--accent:#803d2d;--forest:#46533c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.65 system-ui,"Malgun Gothic",sans-serif}
+main{max-width:1080px;margin:auto;padding:0 clamp(20px,5vw,64px) 48px}
+header{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);margin-bottom:clamp(24px,5vw,58px)}
+h1,h2,h3{line-height:1.24;word-break:keep-all}
+h1{font-family:"Nanum Myeongjo","Batang",serif;font-size:clamp(33px,6vw,61px);letter-spacing:-.055em;margin:0 0 18px}
+h2{font-size:clamp(22px,3.5vw,31px);letter-spacing:-.045em}
+p{margin:10px 0 18px}
+button,input,textarea,select{font:inherit}
+button{border:1px solid var(--line);background:var(--page);color:var(--ink);border-radius:6px;padding:10px 16px;min-height:48px;margin:4px 6px 4px 0;cursor:pointer}
+button:hover{border-color:var(--accent);background:#f7eadd}
+header button{background:transparent;margin:0}
+#home{border-color:transparent;padding-left:0;font-weight:750}
+.primary,.primary:hover{background:var(--accent);border-color:var(--accent);color:white}
+.intro{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 155px;align-items:center;gap:28px;padding:clamp(24px,5vw,55px);background:#ecdfcd;border:1px solid var(--line);border-radius:5px;margin-bottom:24px}
+.intro p{color:var(--muted);margin-bottom:0}
+.book-mark{position:relative;justify-self:center;width:104px;height:134px;border:1px solid #586148;border-radius:3px 9px 9px 3px;background:#626e51;box-shadow:4px 5px 0 #fff8e9,6px 7px 0 #bbab93;transform:rotate(9deg)}
+.book-mark:before{content:"";position:absolute;inset:13px 14px 13px 17px;border:1px solid #c6bea0}
+.book-mark:after{content:"";position:absolute;top:0;right:21px;width:15px;height:39px;background:#bc7959;clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cards button{text-align:left;margin:0;padding:19px 42px 19px 20px;position:relative;border-left:4px solid var(--accent)}
+.cards button:nth-child(even){border-left-color:var(--forest)}
+.cards button:after{content:"→";position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--accent)}
+.cards strong{display:block;font-size:22px;letter-spacing:-.04em}
+.cards span,small{display:block;color:var(--muted);font-size:15px}
+.panel,article{background:var(--page);border:1px solid var(--line);border-radius:7px;padding:clamp(18px,4vw,32px);margin:14px 0}
+.panel h2,article h2{margin-top:0}
+textarea,input,select{border:1px solid #a99a88;border-radius:5px;padding:10px;color:inherit;background:#fffdfa}
+textarea,input[type=text]{display:block;width:100%;margin:8px 0 16px}
+textarea{min-height:135px;resize:vertical;line-height:1.85}
+label{font-weight:600}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+details{margin:12px 0}
+summary{cursor:pointer;color:var(--forest);font-weight:650;padding:10px 0}
+[role=status]{color:var(--accent)}
+:focus-visible{outline:3px solid #8d5137;outline-offset:3px}
+@media(max-width:560px){.intro{grid-template-columns:minmax(0,1fr) 42px;gap:12px}.book-mark{width:49px;height:70px}.book-mark:before{inset:9px}.book-mark:after{height:24px;right:10px;width:10px}.cards{grid-template-columns:1fr}}
+</style>
+<main><header><button id="home">처음 화면</button><button id="archive">내 글 모아보기</button></header><section id="screen"></section><p id="status" role="status"></p></main>
+<script>
+const activities = {
+  '독후감': [
+    ['두 인물은 어떤 사이 같아?', '함께 나온 두 사람의 이름부터 떠올려 봐.'],
+    ['책을 다시 펼쳐 봐. 어떤 말이나 행동이 두 사람의 관계를 알려 줘?', '두 사람이 함께 나온 장면을 찾아 서로를 어떻게 부르는지 살펴봐.'],
+    ['두 사람의 관계와 책에서 찾은 단서를 써 봐.', '두 사람은 ___한 사이인 것 같아. 책에서 ___한 장면이 단서였어.'],
+    '읽는 사람이 두 사람의 관계를 짐작할 수 있는 장면이 들어 있니?'
+  ],
+  '일기': [
+    ['오늘 있었던 일 중 한 장면을 말해 봐.', '쉬는 시간이나 집에 돌아온 뒤에 무엇을 했는지 떠올려 봐.'],
+    ['그 장면에서 네가 한 행동이나 마음이 달라진 순간을 말해 봐.', '누가 무슨 말을 했거나 어떤 행동을 했는지 떠올려 봐.'],
+    ['있었던 일과 그때 든 느낌을 써 봐.', '___할 때 ___했다. 그때 ___해서 ___한 마음이 들었다.'],
+    '네가 왜 그런 기분이었는지 읽는 사람도 알 수 있니?'
+  ],
+  '주제 글쓰기': [
+    ['이 주제에 대한 네 생각을 말해 봐.', '두 가지 선택이 있다면 먼저 더 마음에 드는 쪽을 골라 봐.'],
+    ['왜 그렇게 생각해?', '네가 겪은 일 중 그 이유를 보여 주는 장면 하나를 떠올려 봐.'],
+    ['네 생각과 그 이유를 써 봐.', '나는 ___라고 생각한다. 왜냐하면 ___이기 때문이다. 예를 들면 ___.'],
+    '네가 든 이유가 처음에 쓴 생각과 이어지니?'
+  ]
+};
+const topics = ['학교 쉬는 시간을 10분 늘리면 좋을까?', '학교에 새 동아리가 생긴다면 어떤 동아리가 좋을까?', '학급에서 자리 선택을 자유롭게 하면 좋을까?', '친구에게 추천하고 싶은 놀이는 무엇일까?', '학급에 반려식물을 기르면 좋을까?', '학교에 조용히 쉴 수 있는 공간이 필요할까?', '친구와 의견이 다를 때 어떻게 하면 좋을까?'];
+const vocabulary = [
+  [['단서','무슨 일이 있었는지 알아내는 데 도움이 되는 정보','우산에 붙은 이름표가 주인을 찾는 단서였다.'],['짐작','확실히 모르지만 그럴 것이라고 생각함','창밖이 어두워져 곧 비가 올 거라고 짐작했다.'],['근거','생각이나 판단을 뒷받침하는 이유나 자료','나는 설문 결과를 근거로 내 의견을 설명했다.']],
+  [['계기','어떤 일이 시작되거나 달라지게 된 일','친구의 추천이 책을 읽게 된 계기였다.'],['망설이다','할지 말지 바로 정하지 못하다','처음 보는 친구에게 말을 걸까 망설였다.'],['뿌듯하다','해낸 일이 기쁘고 자랑스럽다','혼자서 발표를 마쳐 뿌듯했다.']],
+  [['맥락','앞뒤 내용이 이어지는 흐름','대화의 맥락을 알자 그 말의 뜻이 이해됐다.'],['추측하다','아는 정보를 바탕으로 답을 생각하다','운동장의 발자국을 보고 누가 먼저 왔는지 추측했다.'],['드러나다','숨겨져 있던 것이 보이거나 알려지다','편지를 읽자 주인공의 마음이 드러났다.']],
+  [['안심하다','걱정이 줄어 마음이 놓이다','동생이 무사히 돌아와 안심했다.'],['의도','어떤 일을 하려는 생각이나 목적','친구가 그 말을 한 의도는 나를 도와주려는 것이었다.'],['상황','어떤 일이 일어날 때의 형편','버스를 놓친 상황에서 다른 길을 찾아봤다.']],
+  [['갈등','생각이나 마음이 서로 부딪치는 일','두 친구는 놀이 규칙을 정하다가 갈등을 겪었다.'],['해결하다','어려운 문제를 풀다','규칙을 함께 다시 정해 문제를 해결했다.'],['설득하다','이유를 들어 상대가 내 생각을 받아들이게 하다','나는 놀이 방법을 설명하며 친구를 설득했다.']],
+  [['관찰하다','자세히 살펴보다','싹이 어떻게 자라는지 매일 관찰했다.'],['변화','이전과 달라지는 일','물을 준 뒤 잎의 변화를 기록했다.'],['인상적이다','오래 기억에 남을 만큼 마음에 닿다','주인공이 친구에게 먼저 손을 내민 장면이 인상적이었다.']],
+  [['구체적이다','자세해서 모습이나 뜻이 분명하다','어디에서 무슨 일이 있었는지 구체적으로 썼다.'],['비교하다','둘을 살펴 같거나 다른 점을 찾다','처음 쓴 글과 마지막 글을 비교했다.'],['관점','어떤 일을 바라보는 생각이나 방향','같은 사건도 인물마다 관점이 달랐다.']]
+];
+const screen = document.querySelector('#screen');
+const status = document.querySelector('#status');
+const storageKey = 'reading-writing-notebook-v1';
+const day = Math.floor((Date.now() + 9 * 3600000) / 86400000) % vocabulary.length;
+let draft, recognition;
+function element(tag, value, parent = screen) {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  parent.append(node);
+  return node;
+}
+function button(value, action, parent = screen, primary = false) {
+  const node = element('button', value, parent);
+  if (primary) node.className = 'primary';
+  node.onclick = action;
+  return node;
+}
+function reset() {
+  const previous = recognition;
+  recognition = null;
+  previous?.abort();
+  screen.replaceChildren();
+  status.textContent = '';
+}
+function home() {
+  reset();
+  const intro = element('section','');
+  intro.className = 'intro';
+  const copy = element('div','',intro);
+  element('h1','읽고 쓰는 연습장',copy);
+  element('p','책 속에서 찾은 단서, 오늘 떠오른 생각을 네 글로 남겨 봐.',copy);
+  const book = element('div','',intro);
+  book.className = 'book-mark';
+  book.setAttribute('aria-hidden','true');
+  const cards = element('div','');
+  cards.className = 'cards';
+  const descriptions = ['책 속 단서 찾기 · 약 5분','오늘의 한 장면 남기기','내 생각에 이유 붙이기'];
+  Object.keys(activities).forEach((kind, index) => {
+    const card = button('', () => {
+      draft = {kind, title: kind === '주제 글쓰기' ? topics[day] : '', notes:['',''], spoken:['',''], body:''};
+      step(0);
+    }, cards);
+    element('strong',kind,card);
+    element('span',descriptions[index],card);
+  });
+  const words = button('', wordsView, cards);
+  element('strong','오늘의 어휘',words);
+  element('span','뜻과 예문으로 단어 세 개 만나기',words);
+}
+function wordsView() {
+  reset();
+  element('h1','오늘의 어휘');
+  vocabulary[day].forEach(([word, meaning, example]) => {
+    const card = element('article','');
+    element('h2',word,card);
+    element('p',meaning,card);
+    element('p',example,card);
+  });
+}
+function reveal(label, message, parent) {
+  const tip = element('p',message,parent);
+  tip.hidden = true;
+  const toggle = button(label, () => {
+    tip.hidden = !tip.hidden;
+    toggle.setAttribute('aria-expanded',String(!tip.hidden));
+  },parent);
+  toggle.setAttribute('aria-expanded','false');
+}
+function dictate(field, index) {
+  if (recognition) {
+    recognition.stop();
+    return;
+  }
+  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Speech) {
+    status.textContent = '이 브라우저에서는 받아쓰기를 사용할 수 없어. 말해본 뒤 여기에 직접 적어도 돼.';
+    field.focus();
+    return;
+  }
+  const session = new Speech();
+  recognition = session;
+  session.lang = 'ko-KR';
+  session.onresult = event => {
+    if (recognition !== session) return;
+    const transcript = Array.from(event.results).map(result => result[0].transcript).join(' ');
+    draft.spoken[index] = [draft.spoken[index],transcript].filter(Boolean).join(' ');
+    field.value = [field.value.trim(),transcript].filter(Boolean).join(' ');
+    field.oninput();
+  };
+  session.onerror = () => {
+    if (recognition === session) status.textContent = '받아쓰기가 어려웠어. Chrome의 마이크 권한을 확인하거나 직접 적어 봐.';
+  };
+  session.onend = () => {
+    if (recognition !== session) return;
+    recognition = null;
+    if (status.textContent === '듣고 있어. 마치려면 말하기 버튼을 다시 눌러.') status.textContent = '받아쓴 내용을 확인해 봐.';
+  };
+  try {
+    session.start();
+    status.textContent = '듣고 있어. 마치려면 말하기 버튼을 다시 눌러.';
+  } catch {
+    recognition = null;
+    status.textContent = '마이크를 시작하지 못했어. 직접 적어도 돼.';
+  }
+}
+function step(index) {
+  reset();
+  const prompts = activities[draft.kind];
+  element('h1',draft.kind);
+  element('p',['먼저 말해보기','한 가지 더 살펴보기','내 글 쓰기'][index] + ' · ' + (index+1) + '/3');
+  if (draft.kind === '주제 글쓰기') element('h2',draft.title);
+  if (index === 0 && draft.kind === '독후감') {
+    const label = element('label','책 제목');
+    const title = element('input','',label);
+    title.type = 'text';
+    title.value = draft.title;
+    title.oninput = () => { draft.title = title.value; };
+  }
+  const panel = element('section','');
+  panel.className = 'panel';
+  element('h2',prompts[index][0],panel);
+  reveal('힌트 보기',prompts[index][1],panel);
+  if (index === 2) {
+    const notes = element('details','',panel);
+    element('summary','말로 정리한 내용',notes);
+    element('pre',draft.notes.filter(Boolean).join('\n') || '적어 둔 메모가 없어.',notes);
+    notes.open = true;
+    const word = vocabulary[day][draft.kind === '일기' ? 1 : draft.kind === '주제 글쓰기' ? 2 : 0];
+    reveal('어휘 힌트',word.join(' · '),panel);
+  }
+  const label = element('label',index === 2 ? '완성할 글' : '받아쓴 내용 또는 직접 적은 메모',panel);
+  const input = element('textarea','',label);
+  input.value = index === 2 ? draft.body : draft.notes[index];
+  input.oninput = () => {
+    if (index === 2) draft.body = input.value;
+    else draft.notes[index] = input.value;
+  };
+  if (index < 2) {
+    button('🎙 말하기 / 멈추기',() => dictate(input,index),panel,true);
+    button('다음',() => step(index+1),panel);
+  } else {
+    reveal('한 번 더 읽기',prompts[3],panel);
+    if (draft.kind === '독후감') element('p','다음 책에서도 인물 관계가 헷갈리면 두 사람이 서로를 어떻게 부르는지 살펴봐.',panel);
+    button('저장하기',save,panel,true);
+  }
+  if (index > 0) button('이전',() => step(index-1),panel);
+}
+function records() {
+  return JSON.parse(localStorage.getItem(storageKey) || '[]');
+}
+function save() {
+  if (!draft.body.trim()) {
+    status.textContent = '저장하기 전에 네 글을 한 문장이라도 써 봐.';
+    return;
+  }
+  try {
+    const record = {...draft, id: globalThis.crypto?.randomUUID?.() || String(Date.now()), date:new Date().toISOString()};
+    localStorage.setItem(storageKey,JSON.stringify([record,...records()]));
+  } catch {
+    status.textContent = '저장하지 못했어. 이 화면에서 글을 복사해 두고 브라우저 저장 공간을 확인해 줘.';
+    return;
+  }
+  archive();
+  status.textContent = '내 글 모아보기에 저장했어.';
+}
+function validRecord(item) {
+  return item && ['id','date','kind','title','body'].every(key => typeof item[key] === 'string')
+    && Object.hasOwn(activities,item.kind) && Number.isFinite(Date.parse(item.date))
+    && ['notes','spoken'].every(key => Array.isArray(item[key]) && item[key].length === 2 && item[key].every(value => typeof value === 'string'));
+}
+function archive() {
+  reset();
+  element('h1','내 글 모아보기');
+  let items;
+  try { items = records(); } catch {
+    status.textContent = '저장된 글을 읽지 못했어.';
+    return;
+  }
+  const toolbar = element('div','');
+  button('백업 내려받기',() => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(records(),null,2)],{type:'application/json'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'my-writing-backup.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url),1000);
+  },toolbar);
+  const importFile = document.createElement('input');
+  importFile.type = 'file';
+  importFile.accept = '.json,application/json';
+  button('백업 불러오기',() => importFile.click(),toolbar);
+  importFile.onchange = async () => {
+    try {
+      const file = importFile.files[0];
+      if (!file) return;
+      const imported = JSON.parse(await file.text());
+      if (!Array.isArray(imported) || !imported.every(validRecord)) throw Error();
+      const together = new Map(records().map(item => [item.id,item]));
+      imported.forEach(item => { if (!together.has(item.id)) together.set(item.id,item); });
+      localStorage.setItem(storageKey,JSON.stringify([...together.values()].sort((a,b) => Date.parse(b.date)-Date.parse(a.date))));
+      archive();
+      status.textContent = '백업에서 글을 불러왔어.';
+    } catch { status.textContent = '백업을 불러오지 못했어. 내려받은 JSON 파일인지 확인해 줘.'; }
+  };
+  const filterLabel = element('label','활동별 보기 ');
+  const filter = element('select','',filterLabel);
+  ['모두',...Object.keys(activities)].forEach(kind => element('option',kind,filter));
+  const list = element('div','');
+  const comparison = element('div','');
+  comparison.className = 'cards';
+  const selected = new Set();
+  function showRecord(item,parent) {
+    const card = element('article','',parent);
+    element('h3',item.title || item.kind,card);
+    element('small',new Date(item.date).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}) + ' · ' + item.kind,card);
+    element('strong','처음 말한 내용과 이어서 말한 내용',card);
+    element('pre',item.spoken.filter(Boolean).join('\n') || '마이크로 받아쓴 내용이 없어.',card);
+    if (item.notes.join('\n') !== item.spoken.join('\n')) {
+      element('strong','고쳐 적은 말하기 메모',card);
+      element('pre',item.notes.filter(Boolean).join('\n'),card);
+    }
+    element('strong','완성한 글',card);
+    element('pre',item.body,card);
+  }
+  function render() {
+    list.replaceChildren();
+    comparison.replaceChildren();
+    if (!items.length) element('p','아직 저장한 글이 없어.',list);
+    items.filter(item => filter.value === '모두' || item.kind === filter.value).forEach(item => {
+      const detail = element('details','',list);
+      element('summary',(item.title || item.kind) + ' · ' + new Date(item.date).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),detail);
+      showRecord(item,detail);
+      button(selected.has(item.id) ? '비교에서 빼기' : '비교에 담기',() => {
+        if (selected.has(item.id)) selected.delete(item.id);
+        else {
+          if (selected.size === 2) selected.delete(selected.values().next().value);
+          selected.add(item.id);
+        }
+        render();
+      },detail);
+      detail.open = selected.has(item.id);
+    });
+    if (selected.size) element('p', selected.size === 1 ? '나란히 볼 글을 하나 더 골라 봐.' : '새롭게 더해진 장면이나 이유를 함께 찾아봐.',list);
+    items.filter(item => selected.has(item.id)).reverse().forEach(item => showRecord(item,comparison));
+  }
+  filter.onchange = render;
+  render();
+}
+document.querySelector('#home').onclick = home;
+document.querySelector('#archive').onclick = archive;
+home();
+</script></html>
